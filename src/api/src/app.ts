@@ -6,6 +6,7 @@ import { getConfig } from "./config";
 import lists from "./routes/lists";
 import items from "./routes/items";
 import { configureMongo } from "./models/mongo";
+import { configureAI } from "./services/aiService";
 import { observability } from "./config/observability";
 
 // Use API_ALLOW_ORIGINS env var with comma separated urls like
@@ -47,6 +48,7 @@ export const createApp = async (): Promise<Express> => {
     // Configuration
     observability(config.observability);
     await configureMongo(config.database);
+    configureAI(config.openai);
     // Middleware
     app.use(express.json());
     

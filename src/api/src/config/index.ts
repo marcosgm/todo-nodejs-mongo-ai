@@ -1,4 +1,4 @@
-import { AppConfig, DatabaseConfig, ObservabilityConfig } from "./appConfig";
+import { AppConfig, DatabaseConfig, ObservabilityConfig, OpenAIConfig } from "./appConfig";
 import dotenv from "dotenv";
 import { DefaultAzureCredential } from "@azure/identity";
 import { SecretClient } from "@azure/keyvault-secrets";
@@ -18,6 +18,7 @@ export const getConfig: () => Promise<AppConfig> = async () => {
     const config: IConfig = require("config") as IConfig;
     const databaseConfig = config.get<DatabaseConfig>("database");
     const observabilityConfig = config.get<ObservabilityConfig>("observability");
+    const openAIConfig = config.get<OpenAIConfig>("openai");
 
     if (!databaseConfig.connectionString) {
         logger.warn("database.connectionString is required but has not been set. Ensure environment variable 'AZURE_MONGO_CONNECTION_STRING' has been set");
@@ -25,6 +26,10 @@ export const getConfig: () => Promise<AppConfig> = async () => {
 
     if (!observabilityConfig.connectionString) {
         logger.warn("observability.connectionString is required but has not been set. Ensure environment variable 'APPLICATIONINSIGHTS_CONNECTION_STRING' has been set");
+    }
+
+    if (!openAIConfig.endpoint) {
+        logger.warn("openai.endpoint is not set. AI checklist generation will not be available. Set environment variable 'AZURE_OPENAI_ENDPOINT' to enable it.");
     }
 
     return {
@@ -35,6 +40,11 @@ export const getConfig: () => Promise<AppConfig> = async () => {
         database: {
             connectionString: databaseConfig.connectionString,
             databaseName: databaseConfig.databaseName,
+        },
+        openai: {
+            endpoint: openAIConfig.endpoint,
+            deploymentName: openAIConfig.deploymentName,
+            apiKey: openAIConfig.apiKey,
         },
     };
 };

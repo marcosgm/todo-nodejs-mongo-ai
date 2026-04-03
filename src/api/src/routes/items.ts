@@ -3,6 +3,7 @@ import { Request } from "express";
 import { PagingQueryParams } from "../routes/common";
 import { TodoItem, createTodoItem, TodoItemState } from "../models/todoItem";
 import { getTodoItemCollection } from "../models/mongo";
+import { generateChecklist } from "../services/aiService";
 
 const router = express.Router({ mergeParams: true });
 
@@ -44,6 +45,43 @@ router.post("/", async (req: Request<TodoItemPathParams, unknown, TodoItem>, res
         res.status(201).json(item);
     } catch (err: any) {
         console.error("Error creating todo item:", err);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+/**
+ * Creates a new Todo item within a list using an AI-generated step-by-step checklist
+ * appended to the description.
+ */
+router.post("/ai-checklist", async (req: Request<TodoItemPathParams, unknown, { name: string; description?: string }>, res) => {
+    try {
+        const { name, description } = req.body;
+
+        if (!name || typeof name !== "string" || name.trim() === "") {
+            return res.status(400).json({ error: "name is required" });
+        }
+
+        let checklist: string;
+        try {
+            checklist = await generateChecklist(name.trim(), description?.trim());
+        } catch (aiErr: any) {
+            console.error("Error calling Azure OpenAI:", aiErr);
+            return res.status(503).json({ error: "AI service unavailable. Ensure AZURE_OPENAI_ENDPOINT is configured." });
+        }
+
+        const combinedDescription = description?.trim()
+            ? `${description.trim()}\n\n${checklist}`
+            : checklist;
+
+        const collection = getTodoItemCollection();
+        const item = createTodoItem(req.params.listId, name.trim(), combinedDescription);
+
+        await collection.insertOne(item);
+
+        res.setHeader("location", `${req.protocol}://${req.get("Host")}/lists/${req.params.listId}/${item.id}`);
+        res.status(201).json(item);
+    } catch (err: any) {
+        console.error("Error creating AI checklist todo item:", err);
         res.status(500).json({ error: "Internal server error" });
     }
 });

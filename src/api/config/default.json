@@ -6,5 +6,10 @@
     "observability": {
         "connectionString": "",
         "roleName": "API"
+    },
+    "openai": {
+        "endpoint": "",
+        "deploymentName": "gpt-4o",
+        "apiKey": ""
     }
 }

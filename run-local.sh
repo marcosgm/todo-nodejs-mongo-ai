@@ -20,6 +20,18 @@ MONGO_DB_NAME=Todo
 # API connects to MongoDB over the shared Docker network using the container name
 MONGO_CONN_STR="mongodb://${MONGO_CONTAINER}:27017"
 
+# ── Azure OpenAI (AI checklist feature) ──────────────────────────────────────
+# Set AZURE_OPENAI_ENDPOINT in your environment to enable AI-powered checklists.
+# AZURE_OPENAI_DEPLOYMENT_NAME defaults to gpt-4o if not set.
+# AZURE_OPENAI_API_KEY is optional; omit to use DefaultAzureCredential instead.
+AZURE_OPENAI_ENDPOINT="${AZURE_OPENAI_ENDPOINT:-}"
+AZURE_OPENAI_DEPLOYMENT_NAME="${AZURE_OPENAI_DEPLOYMENT_NAME:-gpt-4o}"
+AZURE_OPENAI_API_KEY="${AZURE_OPENAI_API_KEY:-}"
+
+if [[ -z "$AZURE_OPENAI_ENDPOINT" ]]; then
+  echo "[warn] AZURE_OPENAI_ENDPOINT is not set. The 'Generate AI-powered checklist' feature will be disabled."
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ── Build images ─────────────────────────────────────────────────────────────
@@ -66,6 +78,9 @@ docker run -d \
   -e AZURE_MONGO_DATABASE_NAME="$MONGO_DB_NAME" \
   -e NODE_ENV=production \
   -e API_ALLOW_ORIGINS="http://localhost:${WEB_PORT}" \
+  -e AZURE_OPENAI_ENDPOINT="$AZURE_OPENAI_ENDPOINT" \
+  -e AZURE_OPENAI_DEPLOYMENT_NAME="$AZURE_OPENAI_DEPLOYMENT_NAME" \
+  -e AZURE_OPENAI_API_KEY="$AZURE_OPENAI_API_KEY" \
   "$API_IMAGE"
 
 # ── Start Web ─────────────────────────────────────────────────────────────────

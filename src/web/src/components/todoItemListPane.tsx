@@ -1,4 +1,4 @@
-import { CommandBar, DetailsList, DetailsListLayoutMode, IStackStyles, Selection, Label, Spinner, SpinnerSize, Stack, IIconProps, SearchBox, Text, IGroup, IColumn, MarqueeSelection, FontIcon, IObjectWithKey, CheckboxVisibility, IDetailsGroupRenderProps, getTheme } from '@fluentui/react';
+import { CommandBar, DetailsList, DetailsListLayoutMode, IStackStyles, Selection, Label, Spinner, SpinnerSize, Stack, IIconProps, SearchBox, Text, IGroup, IColumn, MarqueeSelection, FontIcon, IObjectWithKey, CheckboxVisibility, IDetailsGroupRenderProps, getTheme, Dialog, DialogType, DialogFooter, TextField, PrimaryButton, DefaultButton } from '@fluentui/react';
 import { ReactElement, useEffect, useState, FormEvent, FC } from 'react';
 import { useNavigate } from 'react-router';
 import { TodoItem, TodoItemState, TodoList } from '../models';
@@ -13,6 +13,7 @@ interface TodoItemListPaneProps {
     onDelete: (item: TodoItem) => void
     onComplete: (item: TodoItem) => void
     onSelect: (item?: TodoItem) => void
+    onAiChecklistCreate: (listId: string, name: string, description?: string) => Promise<TodoItem>
 }
 
 interface TodoDisplayItem extends IObjectWithKey {
@@ -58,6 +59,11 @@ const TodoItemListPane: FC<TodoItemListPaneProps> = (props: TodoItemListPaneProp
     const [newItemName, setNewItemName] = useState('');
     const [items, setItems] = useState(createListItems(props.items || []));
     const [selectedItems, setSelectedItems] = useState<TodoItem[]>([]);
+    const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
+    const [aiItemName, setAiItemName] = useState('');
+    const [aiItemDescription, setAiItemDescription] = useState('');
+    const [isAiLoading, setIsAiLoading] = useState(false);
+    const [aiError, setAiError] = useState<string | undefined>();
     const [isDoneCategoryCollapsed, setIsDoneCategoryCollapsed] = useState(true);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -151,6 +157,31 @@ const TodoItemListPane: FC<TodoItemListPaneProps> = (props: TodoItemListPaneProp
         selectedItems.map(item => props.onDelete(item));
     }
 
+    const openAiDialog = () => {
+        setAiItemName('');
+        setAiItemDescription('');
+        setAiError(undefined);
+        setIsAiDialogOpen(true);
+    }
+
+    const onAiGenerate = async () => {
+        if (!aiItemName.trim()) return;
+        setIsAiLoading(true);
+        setAiError(undefined);
+        try {
+            await props.onAiChecklistCreate(
+                props.list?.id || '',
+                aiItemName.trim(),
+                aiItemDescription.trim() || undefined
+            );
+            setIsAiDialogOpen(false);
+        } catch {
+            setAiError('Failed to generate checklist. Please check the AI service configuration and try again.');
+        } finally {
+            setIsAiLoading(false);
+        }
+    }
+
     const columns: IColumn[] = [
         { key: 'name', name: 'Name', fieldName: 'name', minWidth: 100 },
         { key: 'dueDate', name: 'Due', fieldName: 'dueDate', minWidth: 100 },
@@ -212,6 +243,13 @@ const TodoItemListPane: FC<TodoItemListPaneProps> = (props: TodoItemListPaneProp
                                         disabled: props.disabled,
                                         iconProps: { iconName: 'Delete' },
                                         onClick: () => { deleteItems() }
+                                    },
+                                    {
+                                        key: 'aiChecklist',
+                                        text: 'Generate AI-powered checklist',
+                                        disabled: props.disabled,
+                                        iconProps: { iconName: 'Lightbulb' },
+                                        onClick: () => { openAiDialog() }
                                     }
                                 ]}
                                 ariaLabel="Todo actions" />
@@ -251,6 +289,47 @@ const TodoItemListPane: FC<TodoItemListPaneProps> = (props: TodoItemListPaneProp
                     <Text>This list is empty.</Text>
                 </Stack.Item>
             }
+            <Dialog
+                hidden={!isAiDialogOpen}
+                onDismiss={() => { if (!isAiLoading) setIsAiDialogOpen(false); }}
+                dialogContentProps={{
+                    type: DialogType.normal,
+                    title: 'Generate AI-powered checklist',
+                    subText: 'Enter a task name and optional description. An AI-generated step-by-step checklist will be added to the item description.',
+                }}
+                modalProps={{ isBlocking: isAiLoading }}
+            >
+                <TextField
+                    label="Name"
+                    placeholder="Task name"
+                    required
+                    value={aiItemName}
+                    onChange={(_e, v) => setAiItemName(v || '')}
+                    disabled={isAiLoading}
+                />
+                <TextField
+                    label="Description (optional)"
+                    placeholder="Additional context for the AI"
+                    multiline
+                    rows={3}
+                    value={aiItemDescription}
+                    onChange={(_e, v) => setAiItemDescription(v || '')}
+                    disabled={isAiLoading}
+                />
+                {aiError && <Text variant="small" style={{ color: 'red' }}>{aiError}</Text>}
+                <DialogFooter>
+                    <PrimaryButton
+                        text={isAiLoading ? 'Generating…' : 'Generate & Create'}
+                        onClick={onAiGenerate}
+                        disabled={!aiItemName.trim() || isAiLoading}
+                    />
+                    <DefaultButton
+                        text="Cancel"
+                        onClick={() => setIsAiDialogOpen(false)}
+                        disabled={isAiLoading}
+                    />
+                </DialogFooter>
+            </Dialog>
         </Stack>
     );
 };

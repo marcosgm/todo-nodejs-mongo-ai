@@ -151,7 +151,8 @@ const HomePage = () => {
                     onSelect={onItemSelected}
                     onCreated={onItemCreated}
                     onComplete={onItemCompleted}
-                    onDelete={onItemDeleted} />
+                    onDelete={onItemDeleted}
+                    onAiChecklistCreate={(listId, name, description) => actions.items.generateAiChecklist(listId, name, description)} />
             </Stack.Item>
         </Stack >
     );

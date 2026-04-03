@@ -8,7 +8,14 @@ export interface DatabaseConfig {
     databaseName: string
 }
 
+export interface OpenAIConfig {
+    endpoint: string
+    deploymentName: string
+    apiKey: string
+}
+
 export interface AppConfig {
     observability: ObservabilityConfig
     database: DatabaseConfig
+    openai: OpenAIConfig
 }

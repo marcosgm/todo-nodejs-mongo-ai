@@ -15,6 +15,7 @@ export interface ItemActions {
     load(listId: string, id: string): Promise<TodoItem>
     save(listId: string, Item: TodoItem): Promise<TodoItem>
     remove(listId: string, Item: TodoItem): Promise<void>
+    generateAiChecklist(listId: string, name: string, description?: string): Promise<TodoItem>
 }
 
 export const list = (listId: string, options?: QueryOptions): ActionMethod<TodoItem[]> => async (dispatch: Dispatch<ListItemsAction>) => {
@@ -56,6 +57,13 @@ export const remove = (listId: string, item: TodoItem): ActionMethod<void> => as
         await itemService.delete(item.id);
         dispatch(deleteItemAction(item.id));
     }
+}
+
+export const generateAiChecklist = (listId: string, name: string, description?: string): ActionMethod<TodoItem> => async (dispatch: Dispatch<SaveItemAction>) => {
+    const itemService = new ItemService(config.api.baseUrl, `/lists/${listId}/items`);
+    const newItem = await itemService.generateAiChecklist(name, description);
+    dispatch(saveItemAction(newItem));
+    return newItem;
 }
 
 export interface ListItemsAction extends PayloadAction<string, TodoItem[]> {

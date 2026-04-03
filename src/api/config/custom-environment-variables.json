@@ -6,5 +6,10 @@
     "observability": {
         "connectionString": "APPLICATIONINSIGHTS_CONNECTION_STRING",
         "roleName": "APPLICATIONINSIGHTS_ROLE_NAME"
+    },
+    "openai": {
+        "endpoint": "AZURE_OPENAI_ENDPOINT",
+        "deploymentName": "AZURE_OPENAI_DEPLOYMENT_NAME",
+        "apiKey": "AZURE_OPENAI_API_KEY"
     }
 }
