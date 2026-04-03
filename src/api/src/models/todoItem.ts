@@ -28,7 +28,7 @@ export const createTodoItem = (listId: string, name: string, description?: strin
         state: TodoItemState.Todo,
         createdDate: now,
         updatedDate: now,
-        Hash: id // Partition key for Cosmos DB - same as id for simplicity
+        Hash: id // Partition key for Mongo DB - same as id for simplicity
     };
 };
 

@@ -16,7 +16,7 @@ export const createTodoList = (name: string, description?: string): TodoList => 
         description,
         createdDate: now,
         updatedDate: now,
-        Hash: id // Partition key for Cosmos DB - same as id for simplicity
+        Hash: id // Partition key for Mongo DB - same as id for simplicity
     };
 };
 

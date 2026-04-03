@@ -11,8 +11,8 @@
 
 Create a `.env` with the following configuration:
 
-- `AZURE_COSMOS_CONNECTION_STRING` - Cosmos DB connection string (Mongo DB also supported)
-- `AZURE_COSMOS_DATABASE_NAME` - Cosmos DB database name (Will automatically be created if it doesn't exist) (default: Todo)
+- `AZURE_MONGO_CONNECTION_STRING` - Mongo DB connection string
+- `AZURE_MONGO_DATABASE_NAME` - Mongo DB database name (Will automatically be created if it doesn't exist) (default: Todo)
 - `APPLICATIONINSIGHTS_CONNECTION_STRING` - Azure Application Insights connection string
 - `APPLICATIONINSIGHTS_ROLE_NAME` - Azure Application Insights Role name (default: API)
 

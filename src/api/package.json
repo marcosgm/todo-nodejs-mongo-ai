@@ -24,7 +24,7 @@
     ]
   },
   "dependencies": {
-    "@azure/cosmos": "^4.0.0",
+    "mongodb": "^6.3.0",
     "@azure/identity": "4.2.1",
     "@azure/keyvault-secrets": "^4.7.0",
     "applicationinsights": "^2.5.1",

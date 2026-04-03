@@ -1,7 +1,7 @@
 {
     "database": {
-        "endpoint": "AZURE_COSMOS_ENDPOINT",
-        "databaseName": "AZURE_COSMOS_DATABASE_NAME"
+        "connectionString": "AZURE_MONGO_CONNECTION_STRING",
+        "databaseName": "AZURE_MONGO_DATABASE_NAME"
     },
     "observability": {
         "connectionString": "APPLICATIONINSIGHTS_CONNECTION_STRING",

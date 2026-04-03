@@ -2,7 +2,7 @@ import express from "express";
 import { Request } from "express";
 import { PagingQueryParams } from "../routes/common";
 import { TodoItem, createTodoItem, TodoItemState } from "../models/todoItem";
-import { getTodoItemContainer } from "../models/cosmos";
+import { getTodoItemCollection } from "../models/mongo";
 
 const router = express.Router({ mergeParams: true });
 
@@ -17,15 +17,11 @@ type TodoItemPathParams = {
  */
 router.get("/", async (req: Request<TodoItemPathParams, unknown, unknown, PagingQueryParams>, res) => {
     try {
-        const container = getTodoItemContainer();
+        const collection = getTodoItemCollection();
         const skip = req.query.skip ? parseInt(req.query.skip) : 0;
         const top = req.query.top ? parseInt(req.query.top) : 20;
         
-        const query = `SELECT * FROM c WHERE c.listId = @listId OFFSET ${skip} LIMIT ${top}`;
-        const { resources } = await container.items.query({
-            query,
-            parameters: [{ name: "@listId", value: req.params.listId }]
-        }).fetchAll();
+        const resources = await collection.find({ listId: req.params.listId }).skip(skip).limit(top).toArray();
         
         res.json(resources);
     } catch (err: any) {
@@ -39,17 +35,13 @@ router.get("/", async (req: Request<TodoItemPathParams, unknown, unknown, Paging
  */
 router.post("/", async (req: Request<TodoItemPathParams, unknown, TodoItem>, res) => {
     try {
-        const container = getTodoItemContainer();
+        const collection = getTodoItemCollection();
         const item = createTodoItem(req.params.listId, req.body.name, req.body.description);
         
-        const { resource } = await container.items.create(item);
+        await collection.insertOne(item);
         
-        if (!resource) {
-            return res.status(500).json({ error: "Failed to create todo item" });
-        }
-        
-        res.setHeader("location", `${req.protocol}://${req.get("Host")}/lists/${req.params.listId}/${resource.id}`);
-        res.status(201).json(resource);
+        res.setHeader("location", `${req.protocol}://${req.get("Host")}/lists/${req.params.listId}/${item.id}`);
+        res.status(201).json(item);
     } catch (err: any) {
         console.error("Error creating todo item:", err);
         res.status(500).json({ error: "Internal server error" });
@@ -61,18 +53,15 @@ router.post("/", async (req: Request<TodoItemPathParams, unknown, TodoItem>, res
  */
 router.get("/:itemId", async (req: Request<TodoItemPathParams>, res) => {
     try {
-        const container = getTodoItemContainer();
-        const { resource } = await container.item(req.params.itemId, req.params.itemId).read();
+        const collection = getTodoItemCollection();
+        const resource = await collection.findOne({ id: req.params.itemId, listId: req.params.listId });
         
-        if (!resource || resource.listId !== req.params.listId) {
+        if (!resource) {
             return res.status(404).send();
         }
         
         res.json(resource);
     } catch (err: any) {
-        if (err.code === 404) {
-            return res.status(404).send();
-        }
         console.error("Error getting todo item:", err);
         res.status(500).json({ error: "Internal server error" });
     }
@@ -83,22 +72,23 @@ router.get("/:itemId", async (req: Request<TodoItemPathParams>, res) => {
  */
 router.put("/:itemId", async (req: Request<TodoItemPathParams, unknown, TodoItem>, res) => {
     try {
-        const container = getTodoItemContainer();
+        const collection = getTodoItemCollection();
         const item: TodoItem = {
             ...req.body,
             id: req.params.itemId,
             listId: req.params.listId,
-            Hash: req.params.itemId, // Partition key must match id
+            Hash: req.params.itemId,
             updatedDate: new Date()
         };
 
-        const { resource } = await container.item(req.params.itemId, req.params.itemId).replace(item);
+        const result = await collection.replaceOne({ id: req.params.itemId }, item);
         
-        res.json(resource);
-    } catch (err: any) {
-        if (err.code === 404) {
+        if (result.matchedCount === 0) {
             return res.status(404).send();
         }
+
+        res.json(item);
+    } catch (err: any) {
         console.error("Error updating todo item:", err);
         res.status(500).json({ error: "Internal server error" });
     }
@@ -109,14 +99,15 @@ router.put("/:itemId", async (req: Request<TodoItemPathParams, unknown, TodoItem
  */
 router.delete("/:itemId", async (req, res) => {
     try {
-        const container = getTodoItemContainer();
-        await container.item(req.params.itemId, req.params.itemId).delete();
+        const collection = getTodoItemCollection();
+        const result = await collection.deleteOne({ id: req.params.itemId });
         
-        res.status(204).send();
-    } catch (err: any) {
-        if (err.code === 404) {
+        if (result.deletedCount === 0) {
             return res.status(404).send();
         }
+
+        res.status(204).send();
+    } catch (err: any) {
         console.error("Error deleting todo item:", err);
         res.status(500).json({ error: "Internal server error" });
     }
@@ -127,18 +118,11 @@ router.delete("/:itemId", async (req, res) => {
  */
 router.get("/state/:state", async (req: Request<TodoItemPathParams, unknown, unknown, PagingQueryParams>, res) => {
     try {
-        const container = getTodoItemContainer();
+        const collection = getTodoItemCollection();
         const skip = req.query.skip ? parseInt(req.query.skip) : 0;
         const top = req.query.top ? parseInt(req.query.top) : 20;
         
-        const query = `SELECT * FROM c WHERE c.listId = @listId AND c.state = @state OFFSET ${skip} LIMIT ${top}`;
-        const { resources } = await container.items.query({
-            query,
-            parameters: [
-                { name: "@listId", value: req.params.listId },
-                { name: "@state", value: req.params.state as string }
-            ]
-        }).fetchAll();
+        const resources = await collection.find({ listId: req.params.listId, state: req.params.state as string }).skip(skip).limit(top).toArray();
         
         res.json(resources);
     } catch (err: any) {
@@ -149,18 +133,20 @@ router.get("/state/:state", async (req: Request<TodoItemPathParams, unknown, unk
 
 router.put("/state/:state", async (req: Request<TodoItemPathParams, unknown, string[]>, res) => {
     try {
-        const container = getTodoItemContainer();
+        const collection = getTodoItemCollection();
         const completedDate = req.params.state === TodoItemState.Done ? new Date() : undefined;
 
         const updatePromises = req.body.map(async (id: string) => {
-            const { resource } = await container.item(id, id).read();
-            if (resource && resource.listId === req.params.listId) {
-                resource.state = req.params.state;
-                resource.completedDate = completedDate;
-                resource.updatedDate = new Date();
-                resource.Hash = resource.id; // Ensure partition key is consistent
-                await container.item(id, id).replace(resource);
-            }
+            await collection.updateOne(
+                { id, listId: req.params.listId },
+                {
+                    $set: {
+                        state: req.params.state,
+                        completedDate,
+                        updatedDate: new Date()
+                    }
+                }
+            );
         });
 
         await Promise.all(updatePromises);
