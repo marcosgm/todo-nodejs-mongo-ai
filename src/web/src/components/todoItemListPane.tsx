@@ -209,7 +209,7 @@ const TodoItemListPane: FC<TodoItemListPaneProps> = (props: TodoItemListPaneProp
                         {item.description &&
                             <>
                                 <FontIcon iconName="QuickNote" style={{ padding: "5px 5px 5px 0" }} />
-                                <Text variant="smallPlus">{item.description}</Text>
+                                <Text variant="smallPlus" style={{ whiteSpace: 'pre-wrap' }}>{item.description}</Text>
                             </>
                         }
                     </>

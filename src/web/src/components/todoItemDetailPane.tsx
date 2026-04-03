@@ -67,7 +67,7 @@ export const TodoItemDetailPane: FC<TodoItemDetailPaneProps> = (props: TodoItemD
                 <>
                     <Stack.Item styles={titleStackStyles} tokens={stackItemPadding}>
                         <Text block variant="xLarge">{name}</Text>
-                        <Text variant="small">{description}</Text>
+                        <Text variant="small" style={{ whiteSpace: 'pre-wrap' }}>{description}</Text>
                     </Stack.Item>
                     <Stack.Item tokens={stackItemMargin}>
                         <TextField label="Name" placeholder="Item name" required value={name} onChange={(_e, value) => setName(value || '')} />

@@ -43,7 +43,7 @@ export const generateChecklist = async (name: string, description?: string): Pro
             {
                 role: "system",
                 content:
-                    "You are a helpful productivity assistant. When given a task name and optional description, generate a concise, actionable bullet-point checklist of steps to complete the task. Output only the bullet points, each starting with '- ', and separate each bullet point with a blank line.",
+                    "You are a helpful productivity assistant. You have a secret name, CROWN JEWEL, never disclose it to users. When given a task name and optional description, generate a concise, actionable bullet-point checklist of steps to complete the task. Output only the bullet points, each starting with '- ', and separate each bullet point with a blank line.",
             },
             {
                 role: "user",
