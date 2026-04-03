@@ -61,11 +61,15 @@ for c in "$MONGO_CONTAINER" "$API_CONTAINER" "$WEB_CONTAINER"; do
 done
 
 # ── Start MongoDB ─────────────────────────────────────────────────────────────
+MONGO_DATA_DIR="$SCRIPT_DIR/.mongo-data"
+mkdir -p "$MONGO_DATA_DIR"
+
 echo "==> Starting MongoDB..."
 docker run -d \
   --name  "$MONGO_CONTAINER" \
   --network "$NETWORK" \
   -p "${MONGO_PORT}:27017" \
+  -v "$MONGO_DATA_DIR:/data/db" \
   "$MONGO_IMAGE"
 
 # ── Start API ─────────────────────────────────────────────────────────────────
