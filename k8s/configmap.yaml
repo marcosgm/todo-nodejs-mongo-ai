@@ -13,6 +13,3 @@ data:
   APPLICATIONINSIGHTS_ROLE_NAME: "API"
   AZURE_OPENAI_DEPLOYMENT_NAME: "gpt-4o"
   AZURE_OPENAI_ENDPOINT: "https://<your-openai-resource>.openai.azure.com/"
-  # Comma-separated list of allowed CORS origins for the API.
-  # Update to match the URL where the web frontend will be served.
-  API_ALLOW_ORIGINS: "http://localhost:80"

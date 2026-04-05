@@ -9,6 +9,6 @@ metadata:
 data:
   config.js: |
     window.__config = {
-      API_BASE_URL: 'http://todo-api:3100',
+      API_BASE_URL: '/api',
       APPLICATIONINSIGHTS_CONNECTION_STRING: ''
     };

@@ -48,9 +48,7 @@ metadata:
 spec:
   selector:
     app: todo-web
-  # Use LoadBalancer to expose the web app externally, or ClusterIP when
-  # placing it behind an Ingress controller.
-  type: LoadBalancer
+  type: ClusterIP
   ports:
     - name: http
       port: 80
