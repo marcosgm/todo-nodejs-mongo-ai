@@ -1,20 +1,20 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: todo-ingress
+  name: todo-api-ingress
   namespace: todo-app
   labels:
     app.kubernetes.io/name: todo-app
+    app.kubernetes.io/component: api
   annotations:
     # Strip the /api prefix before forwarding to the API service.
+    # e.g. /api/lists → /lists
     nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: webapprouting.kubernetes.azure.com
   rules:
     - http:
         paths:
-          # All /api/* requests are forwarded to the API service with the /api prefix removed.
-          # e.g. /api/lists → /lists
           - path: /api(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
@@ -22,7 +22,20 @@ spec:
                 name: todo-api
                 port:
                   name: http
-          # Everything else is served by the web frontend.
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: todo-web-ingress
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-app
+    app.kubernetes.io/component: web
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  rules:
+    - http:
+        paths:
           - path: /
             pathType: Prefix
             backend:
