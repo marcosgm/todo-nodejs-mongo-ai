@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-web
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-app
+    app.kubernetes.io/component: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo-web
+  template:
+    metadata:
+      labels:
+        app: todo-web
+        app.kubernetes.io/name: todo-app
+        app.kubernetes.io/component: web
+    spec:
+      containers:
+        - name: web
+          # Replace with your actual image repository and tag.
+          # Build with: docker build --build-arg VITE_API_BASE_URL=http://todo-api:3100 ...
+          image: todo-web:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - name: runtime-config
+              mountPath: /usr/share/nginx/html/config.js
+              subPath: config.js
+      volumes:
+        - name: runtime-config
+          configMap:
+            name: todo-web-runtime-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-web
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-app
+    app.kubernetes.io/component: web
+spec:
+  selector:
+    app: todo-web
+  # Use LoadBalancer to expose the web app externally, or ClusterIP when
+  # placing it behind an Ingress controller.
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

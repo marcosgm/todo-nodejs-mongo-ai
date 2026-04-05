@@ -3,10 +3,6 @@ FROM node:20-alpine AS build
 # make the 'app' folder the current working directory
 WORKDIR /app
 
-# Allow overriding the API base URL at build time (Vite bakes this into the bundle)
-ARG VITE_API_BASE_URL=http://localhost:3100
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-
 COPY . .
 
 # install project dependencies

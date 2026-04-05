@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-web-runtime-config
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-app
+    app.kubernetes.io/component: web
+data:
+  config.js: |
+    window.__config = {
+      API_BASE_URL: 'http://todo-api:3100',
+      APPLICATIONINSIGHTS_CONNECTION_STRING: ''
+    };

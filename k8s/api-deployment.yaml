@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-api
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-app
+    app.kubernetes.io/component: api
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo-api
+  template:
+    metadata:
+      labels:
+        app: todo-api
+        app.kubernetes.io/name: todo-app
+        app.kubernetes.io/component: api
+    spec:
+      containers:
+        - name: api
+          # Replace with your actual image repository and tag.
+          image: todo-api:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 3100
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: todo-api-config
+          env:
+            - name: AZURE_MONGO_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: todo-api-secrets
+                  key: AZURE_MONGO_CONNECTION_STRING
+            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  name: todo-api-secrets
+                  key: APPLICATIONINSIGHTS_CONNECTION_STRING
+            - name: AZURE_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: todo-api-secrets
+                  key: AZURE_OPENAI_API_KEY
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-api
+  namespace: todo-app
+  labels:
+    app.kubernetes.io/name: todo-app
+    app.kubernetes.io/component: api
+spec:
+  selector:
+    app: todo-api
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 3100
+      targetPort: http
+      protocol: TCP
