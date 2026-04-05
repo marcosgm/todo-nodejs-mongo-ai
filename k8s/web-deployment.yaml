@@ -18,11 +18,10 @@ spec:
         app.kubernetes.io/name: todo-app
         app.kubernetes.io/component: web
     spec:
+      serviceAccountName: todo-app-sa
       containers:
         - name: web
-          # Replace with your actual image repository and tag.
-          # Build with: docker build --build-arg VITE_API_BASE_URL=http://todo-api:3100 ...
-          image: todo-web:latest
+          image: ${IMAGE_REGISTRY}/todo-web:latest
           imagePullPolicy: Always
           ports:
             - name: http

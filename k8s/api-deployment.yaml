@@ -18,10 +18,10 @@ spec:
         app.kubernetes.io/name: todo-app
         app.kubernetes.io/component: api
     spec:
+      serviceAccountName: todo-app-sa
       containers:
         - name: api
-          # Replace with your actual image repository and tag.
-          image: todo-api:latest
+          image: ${IMAGE_REGISTRY}/todo-api:latest
           imagePullPolicy: Always
           ports:
             - name: http
