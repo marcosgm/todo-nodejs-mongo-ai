@@ -7,4 +7,8 @@ COPY . .
 RUN npm ci
 RUN npm run build
 
-CMD ["npm","run","start"]
+# Route file-based Winston logs to container streams so kubectl logs can capture them.
+RUN ln -sf /dev/stderr /app/error.log \
+	&& ln -sf /dev/stderr /app/exceptions.log
+
+CMD ["node","dist/index.js"]
