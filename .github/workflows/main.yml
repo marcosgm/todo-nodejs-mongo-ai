@@ -113,57 +113,36 @@ jobs:
           admin: 'false'
           use-kubelogin: 'true'
 
-      - name: Deploys Namespace
-        uses: Azure/k8s-deploy@v4
-        with:
-          action: deploy
-          namespace: ${{ env.NAMESPACE }}
-          manifests: k8s/namespace.yaml
+      - name: Ensure envsubst is available
+        run: |
+          if ! command -v envsubst >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y gettext-base
+          fi
 
-      - name: Deploys RBAC
-        uses: Azure/k8s-deploy@v4
-        with:
-          action: deploy
-          namespace: ${{ env.NAMESPACE }}
-          manifests: k8s/rbac.yaml
+      - name: Deploy Kubernetes manifests with envsubst
+        run: |
+          set -euo pipefail
+          cd k8s         
 
-      - name: Deploys Secrets
-        uses: Azure/k8s-deploy@v4
-        with:
-          action: deploy
-          namespace: ${{ env.NAMESPACE }}
-          manifests: k8s/secrets.yaml
+          echo "Applying namespace..."
+          kubectl apply -f "namespace.yaml"
 
-      - name: Deploys Configmaps
-        uses: Azure/k8s-deploy@v4
-        with:
-          action: deploy
-          namespace: ${{ env.NAMESPACE }}
-          manifests: |
-            k8s/configmap.yaml
-            k8s/web-configmap.yaml
+          echo "Applying RBAC..."
+          kubectl apply -f "rbac.yaml"
 
-      - name: Deploys API application
-        uses: Azure/k8s-deploy@v4
-        with:
-          action: deploy
-          namespace: ${{ env.NAMESPACE }}
-          manifests: k8s/api-deployment.yaml
-          images: |
-            todo-api:${{ github.sha }}
+          echo "Applying secrets..."
+          envsubst < "secrets.yaml" | kubectl apply -f -
 
-      - name: Deploys Web application
-        uses: Azure/k8s-deploy@v4
-        with:
-          action: deploy
-          namespace: ${{ env.NAMESPACE }}
-          manifests: k8s/web-deployment.yaml
-          images: |
-            todo-web:${{ github.sha }}
+          echo "Applying configmaps..."
+          envsubst < "configmap.yaml" | kubectl apply -f -
+          envsubst < "web-configmap.yaml" | kubectl apply -f -
 
-      - name: Deploys Ingress
-        uses: Azure/k8s-deploy@v4
-        with:
-          action: deploy
-          namespace: ${{ env.NAMESPACE }}
-          manifests: k8s/ingress.yaml
+          echo "Applying deployments..."
+          envsubst < "api-deployment.yaml" | kubectl apply -f -
+          envsubst < "web-deployment.yaml" | kubectl apply -f -
+
+          echo "Applying ingress..."
+          kubectl apply -f "ingress.yaml"
+
+          echo "Done."
