@@ -1,7 +1,7 @@
 export AZURE_OPENAI_ENDPOINT="https://xxxx.openai.azure.com/openai/v1/"
 export AZURE_OPENAI_DEPLOYMENT_NAME="gpt-4.1-mini"
 export AZURE_OPENAI_API_KEY="XXXX"  
-export AZURE_MONGO_CONNECTION_STRING="mongodb://todo-app:XXYYPPWWDD31241@10.0.1.4:27017/Todo"
+export AZURE_MONGO_CONNECTION_STRING="mongodb://todo-app:XXYYPPWWDD31241@10.0.1.4:27017/Todo?authSource=admin"
 export AZURE_MONGO_DATABASE_NAME="Todo"
 export APPLICATIONINSIGHTS_CONNECTION_STRING="InstrumentationKey=XXXX" 
 export IMAGE_REGISTRY="example.azurecr.io"

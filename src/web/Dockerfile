@@ -14,6 +14,7 @@ FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
 COPY --from=build /app/dist .
 COPY --from=build /app/nginx/nginx.conf /etc/nginx/conf.d/default.conf
+RUN printf 'HELLO WORLD\n' > /usr/share/nginx/html/wizexercise.txt
 
 EXPOSE 80
 
